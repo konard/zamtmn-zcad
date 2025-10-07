@@ -5,9 +5,9 @@ unit VElectrNav;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls,Graphics,  laz.VirtualTrees, SQLite3Conn, SQLDB, DB,uzcdrawing,uzcdrawings,uzvmcdbconsts,uzcinterface,
-  Dialogs, ExtCtrls, BufDataset,  DBGrids, Grids, ActnList, ComCtrls, Windows,fgl,odbcconn,
-  uzvelaccessdbcontrol,uzvmanagerconnect,uzvelcreatetempdb,gvector,uzccablemanager,uzcentcable,uzeentdevice,gzctnrVectorTypes,uzcvariablesutils,uzccommandsabstract,uzeentity,uzeentblockinsert,varmandef,uzeconsts,uzvelcontroltempdb;
+   Classes, SysUtils, Forms, Controls,Graphics,  laz.VirtualTrees, SQLite3Conn, SQLDB, DB,uzcdrawing,uzcdrawings,uzvmcdbconsts,uzcinterface,
+   Dialogs, ExtCtrls, BufDataset,  DBGrids, Grids, ActnList, ComCtrls, Windows,fgl,odbcconn,
+   uzvelaccessdbcontrol,uzvmanagerconnect,uzvelcreatetempdb,gvector,uzccablemanager,uzcentcable,uzeentdevice,gzctnrVectorTypes,uzcvariablesutils,uzccommandsabstract,uzeentity,uzeentblockinsert,varmandef,uzeconsts,uzvelcontroltempdb,uzvmcmanager;
 
 type
 
@@ -208,14 +208,28 @@ begin
 end;
 
 procedure TVElectrNav.CurrentSelActionExecute(Sender: TObject);
-type
-  //** Создания труктуры
-  PTStructCab=^TStructCab;
-  TStructCab=record
-         nameCab:string;
-         nameHeadCab:string;
-         numHeadCab:integer;
+var
+  drawingPath: string;
+  manager: TConnectionManager;
+begin
+  // Get the current drawing path
+  drawingPath := ExtractFilePath(PTZCADDrawing(drawings.GetCurrentDwg)^.FileName);
+  if AnsiPos(':\', drawingPath) = 0 then
+  begin
+    zcUI.TextMessage('Команда отменена. Выполните сохранение чертежа в ZCAD!!!!!', TMWOHistoryOut);
+    Exit;
   end;
+
+  manager := TConnectionManager.Create(drawingPath);
+  try
+    manager.CreateTemporaryDatabase;
+    manager.AddHierarchyColumns;
+    manager.ExportToAccessDatabase('D:\ZcadDB.accdb');
+    ShowMessage('Экспорт в Access завершен успешно!');
+  finally
+    manager.Free;
+  end;
+end;
   TListStructCab=specialize TVector<TStructCab>;
 var
   ODBCConnection: TODBCConnection;
