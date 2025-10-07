@@ -90,6 +90,8 @@ connectmanager/
 
 ## Usage Example
 
+### Core Business Logic Usage
+
 ```pascal
 var
   manager: TConnectionManager;
@@ -105,6 +107,37 @@ begin
   end;
 end;
 ```
+
+### GUI Integration
+
+The GUI layer integrates with the core business logic through the `TConnectionManager` facade. For example, the `CurrentSelActionExecute` procedure in `TVElectrNav` (located in `gui/velectrnav.pas`) has been reoriented to use the new architecture:
+
+```pascal
+procedure TVElectrNav.CurrentSelActionExecute(Sender: TObject);
+var
+  drawingPath: string;
+  manager: TConnectionManager;
+begin
+  drawingPath := ExtractFilePath(PTZCADDrawing(drawings.GetCurrentDwg)^.FileName);
+  if AnsiPos(':\', drawingPath) = 0 then
+  begin
+    zcUI.TextMessage('Команда отменена. Выполните сохранение чертежа в ZCAD!!!!!', TMWOHistoryOut);
+    Exit;
+  end;
+
+  manager := TConnectionManager.Create(drawingPath);
+  try
+    manager.CreateTemporaryDatabase;
+    manager.AddHierarchyColumns;
+    manager.ExportToAccessDatabase('D:\ZcadDB.accdb');
+    ShowMessage('Экспорт в Access завершен успешно!');
+  finally
+    manager.Free;
+  end;
+end;
+```
+
+This demonstrates the clean separation: the GUI layer handles user interaction and delegates all business logic to the core layer through the `TConnectionManager` facade.
 
 ## Migration from Old Architecture
 
