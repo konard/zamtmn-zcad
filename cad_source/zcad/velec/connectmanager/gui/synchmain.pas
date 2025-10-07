@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, Menus, ExtCtrls, ActnList, uzvmcdbconsts,
-  velectrnav, lowvolt_nav, specification_nav, db_nav;
+  velectrnav, lowvoltnav, specificationnav, dbnav;
 
 type
   TFrameClass = class of TFrame;
@@ -52,23 +52,23 @@ implementation
 procedure TformSynch.FormCreate(Sender: TObject);
 begin
    // Initialize actions
-   ActElectricalNav.Caption := 'Electrical Navigation';
-   ActElectricalNav.OnExecute := @ActElectricalNavExecute;
-
-   ActLowVoltNav.Caption := 'Low-Voltage Navigation';
-   ActLowVoltNav.OnExecute := @ActLowVoltNavExecute;
-
-   ActSpecificationNav.Caption := 'Specification Navigation';
-   ActSpecificationNav.OnExecute := @ActSpecificationNavExecute;
-
-   ActDBNav.Caption := 'Database Navigation';
-   ActDBNav.OnExecute := @ActDBNavExecute;
+   //ActElectricalNav.Caption := 'Electrical Navigation';
+   //ActElectricalNav.OnExecute := @ActElectricalNavExecute;
+   //
+   //ActLowVoltNav.Caption := 'Low-Voltage Navigation';
+   //ActLowVoltNav.OnExecute := @ActLowVoltNavExecute;
+   //
+   //ActSpecificationNav.Caption := 'Specification Navigation';
+   //ActSpecificationNav.OnExecute := @ActSpecificationNavExecute;
+   //
+   //ActDBNav.Caption := 'Database Navigation';
+   //ActDBNav.OnExecute := @ActDBNavExecute;
 
    // Set menu item actions
-   MenuItem1.Action := ActElectricalNav;
-   MenuItem2.Action := ActLowVoltNav;
-   MenuItem3.Action := ActSpecificationNav;
-   MenuItem4.Action := ActDBNav;
+   //MenuItem1.Action := ActElectricalNav;
+   //MenuItem2.Action := ActLowVoltNav;
+   //MenuItem3.Action := ActSpecificationNav;
+   //MenuItem4.Action := ActDBNav;
 
    ShowFrame(TVElectrNav);
    Constraints.MinWidth := 600;
