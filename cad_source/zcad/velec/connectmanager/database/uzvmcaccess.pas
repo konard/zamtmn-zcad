@@ -22,9 +22,10 @@ unit uzvmcaccess;
 
 interface
 uses
-  sysutils, Classes, Dialogs,
-  SQLDB, odbcconn,
-  uzcinterface;
+   sysutils, Classes, Dialogs, gvector,
+   SQLDB, odbcconn,
+   uzcinterface, uzcvariablesutils, varmandef,
+   uzvmcdrawing;
 
 type
   TDeviceInfoForExport = record
@@ -51,6 +52,8 @@ type
     procedure ClearTables;
     procedure ExportDevice(const ADeviceInfo: TDeviceInfoForExport);
     procedure ExportConnection(const APrimID, ASecID, AFeeder: string);
+    procedure ExportDevicesFromDrawing(ADeviceCollector: TDeviceDataCollector);
+    procedure ExportConnectionsFromDrawing(ADeviceCollector: TDeviceDataCollector);
     procedure Commit;
 
     property DatabasePath: string read FDatabasePath write FDatabasePath;
@@ -152,6 +155,112 @@ procedure TAccessDBExporter.Commit;
 begin
   FTransaction.Commit;
   zcUI.TextMessage('Access export committed successfully', TMWOHistoryOut);
+end;
+
+procedure TAccessDBExporter.ExportDevicesFromDrawing(ADeviceCollector: TDeviceDataCollector);
+var
+  devices: specialize TVector<TDeviceData>;
+  i: integer;
+  deviceInfo: TDeviceInfoForExport;
+  pdev: PGDBObjDevice;
+  pvd: pvardesk;
+  strTemp: string;
+begin
+  devices := ADeviceCollector.CollectAllDevices;
+
+  try
+    for i := 0 to devices.Size - 1 do
+    begin
+      // Get the device object to extract additional properties
+      pdev := ADeviceCollector.GetDeviceByName(devices[i].DevName);
+      if pdev = nil then
+        Continue;
+
+      deviceInfo.nameDev := devices[i].DevName;
+
+      // Extract voltage
+      pvd := FindVariableInEnt(pdev, 'Voltage');
+      if pvd <> nil then
+      begin
+        strTemp := pvd^.data.ptd^.GetValueAsString(pvd^.data.Addr.Instance);
+        if strTemp = '_AC_380V_50Hz' then
+          deviceInfo.volt := 380
+        else if strTemp = '_AC_220V_50Hz' then
+          deviceInfo.volt := 220
+        else
+          deviceInfo.volt := -110;
+      end
+      else
+        deviceInfo.volt := -110;
+
+      // Extract phase
+      pvd := FindVariableInEnt(pdev, 'Phase');
+      if pvd <> nil then
+      begin
+        strTemp := pvd^.data.ptd^.GetValueAsString(pvd^.data.Addr.Instance);
+        if strTemp = '_ABC' then
+          deviceInfo.phase := 'ABC'
+        else if strTemp = '_A' then
+          deviceInfo.phase := 'A'
+        else if strTemp = '_B' then
+          deviceInfo.phase := 'B'
+        else if strTemp = '_C' then
+          deviceInfo.phase := 'C'
+        else
+          deviceInfo.phase := 'Error';
+      end
+      else
+        deviceInfo.phase := 'Error';
+
+      // Extract power
+      pvd := FindVariableInEnt(pdev, 'Power');
+      if pvd <> nil then
+        deviceInfo.power := pdouble(pvd^.data.Addr.Instance)^
+      else
+        deviceInfo.power := -1;
+
+      // Extract cos phi
+      pvd := FindVariableInEnt(pdev, 'CosPHI');
+      if pvd <> nil then
+        deviceInfo.cosPhi := pdouble(pvd^.data.Addr.Instance)^
+      else
+        deviceInfo.cosPhi := -1;
+
+      deviceInfo.typeKc := ''; // Not used in current implementation
+
+      ExportDevice(deviceInfo);
+    end;
+
+    zcUI.TextMessage('Devices exported to Access database', TMWOHistoryOut);
+  finally
+    devices.Free;
+  end;
+end;
+
+procedure TAccessDBExporter.ExportConnectionsFromDrawing(ADeviceCollector: TDeviceDataCollector);
+var
+  devices: specialize TVector<TDeviceData>;
+  i, j: integer;
+begin
+  devices := ADeviceCollector.CollectAllDevices;
+
+  try
+    for i := 0 to devices.Size - 1 do
+    begin
+      for j := 0 to Length(devices[i].Connections) - 1 do
+      begin
+        ExportConnection(
+          devices[i].DevName,
+          devices[i].Connections[j].HeadDeviceName,
+          devices[i].Connections[j].NGHeadDevice
+        );
+      end;
+    end;
+
+    zcUI.TextMessage('Connections exported to Access database', TMWOHistoryOut);
+  finally
+    devices.Free;
+  end;
 end;
 
 end.
