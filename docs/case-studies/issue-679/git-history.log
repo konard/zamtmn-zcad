@@ -1,0 +1,12 @@
+* 9b5d21f9c (HEAD -> issue-679-f0e42ccb15b8, origin/issue-679-f0e42ccb15b8) Initial commit with task details
+* 1fc463031 (upstream/master, origin/master, origin/HEAD, master) Merge pull request #680 from konard/issue-679-75d501410672
+| * 65caf0d84 Заменил текстовые кнопки на иконки в панели инструментов электронных таблиц
+| * 087a836b2 Initial commit with task details
+|/  
+* c9b280032 Добавил картинки
+*   574002ecf Merge pull request #678 from konard/issue-677-94f940bfeb27
+|\  
+| * a8eb7a863 (origin/issue-677-94f940bfeb27) Revert "Initial commit with task details"
+| * 51f6b500d Добавлены иконки для расчета и автоматического расчета в SVG формате
+| * 349be4e57 Исправлено дублирование записей в undo/redo для электронных таблиц
+* f24f4d6c6 Исправлено обновление TsWorksheetGrid после операций с книгой
