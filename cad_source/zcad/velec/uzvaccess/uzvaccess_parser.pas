@@ -88,15 +88,20 @@ var
 begin
   Result := '';
 
-  // Формируем имя колонки (Col1, Col2, ...)
-  fieldName := Format('Col%d', [AColumnIndex]);
-
-  // Проверяем наличие поля
-  if ADataset.FindField(fieldName) = nil then
-    Exit;
+  //// Формируем имя колонки (Col1, Col2, ...)
+  //fieldName := Format('Col%d', [AColumnIndex]);
+  //
+  //// Проверяем наличие поля
+  //if ADataset.FindField(fieldName) = nil then
+  //  Exit;
 
   // Получаем значение и обрезаем пробелы
-  Result := Trim(ADataset.FieldByName(fieldName).AsString);
+  //Result := Trim(ADataset.FieldByName(fieldName).AsString);
+  //Result := Trim(ADataset.FieldByName(fieldName).AsString);
+  if (AColumnIndex < 1) or (AColumnIndex > ADataset.FieldCount) then
+    Exit;
+  Result := Trim(ADataset.Fields[AColumnIndex - 1].AsString);
+
 end;
 
 procedure TExportTableParser.ParseTableInstruction(
