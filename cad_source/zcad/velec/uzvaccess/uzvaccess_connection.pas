@@ -328,7 +328,6 @@ end;
 function TAccessConnection.ListExportTables: TStringList;
 var
   tables: TStringList;
-  tempQuery: TSQLQuery;
   tableName: String;
   regex: TRegExpr;
   i: Integer;
@@ -345,50 +344,52 @@ begin
     Exit;
   end;
 
-  tempQuery := TSQLQuery.Create(nil);
+  // Получаем список всех таблиц
+  tables := TStringList.Create;
   try
-    tempQuery.DataBase := FConnection;
-    tempQuery.Transaction := FTransaction;
-
-    // Получаем список всех таблиц
-    tables := TStringList.Create;
-    try
-      FConnection.GetTableNames(tables, False);
-
-      // Фильтруем таблицы по шаблону EXPORT\d+
-      regex := TRegExpr.Create('^EXPORT(\d+)$');
-      try
-        regex.ModifierI := True; // Регистронезависимый поиск
-
-        for i := 0 to tables.Count - 1 do
-        begin
-          tableName := tables[i];
-          if regex.Exec(tableName) then
-          begin
-            Result.Add(tableName);
-          end;
-        end;
-
-      finally
-        regex.Free;
-      end;
-
-    finally
-      tables.Free;
-    end;
-
-    // Сортируем таблицы по номеру (EXPORT1, EXPORT2, ...)
-    Result.CustomSort(@CompareExportTableNames);
+    FConnection.GetTableNames(tables, False);
 
     programlog.LogOutFormatStr(
-      'uzvaccess: Найдено таблиц экспорта: %d',
-      [Result.Count],
+      'uzvaccess: Получено таблиц из БД: %d',
+      [tables.Count],
       LM_Info
     );
 
+    // Фильтруем таблицы по шаблону EXPORT\d+
+    regex := TRegExpr.Create('^EXPORT(\d+)$');
+    try
+      regex.ModifierI := True; // Регистронезависимый поиск
+
+      for i := 0 to tables.Count - 1 do
+      begin
+        tableName := tables[i];
+        if regex.Exec(tableName) then
+        begin
+          Result.Add(tableName);
+          programlog.LogOutFormatStr(
+            'uzvaccess: Найдена таблица экспорта: %s',
+            [tableName],
+            LM_Info
+          );
+        end;
+      end;
+
+    finally
+      regex.Free;
+    end;
+
   finally
-    tempQuery.Free;
+    tables.Free;
   end;
+
+  // Сортируем таблицы по номеру (EXPORT1, EXPORT2, ...)
+  Result.CustomSort(@CompareExportTableNames);
+
+  programlog.LogOutFormatStr(
+    'uzvaccess: Всего найдено таблиц экспорта: %d',
+    [Result.Count],
+    LM_Info
+  );
 end;
 
 
@@ -403,14 +404,26 @@ begin
   tempQuery.DataBase := FConnection;
   tempQuery.Transaction := FTransaction;
 
+  // Отключаем автоматическое получение первичных ключей
+  // для обхода ошибки SQLPrimaryKeys с Access ODBC драйвером
+  tempQuery.UsePrimaryKeyAsKey := False;
+
   try
-    //tempQuery.SQL.Text := 'SELECT * FROM ' + ATableName;
     tempQuery.SQL.Text := Format('SELECT * FROM [%s]', [ATableName]);
+
+    programlog.LogOutFormatStr(
+      'uzvaccess: Попытка открытия таблицы %s',
+      [ATableName],
+      LM_Info
+    );
+
     tempQuery.Open;
 
     programlog.LogOutFormatStr(
-       Format('Таблица %s открыта, строк: %d',[ATableName, tempQuery.RecordCount]), [],
-        LM_Info);
+      'uzvaccess: Таблица %s открыта, строк: %d',
+      [ATableName, tempQuery.RecordCount],
+      LM_Info
+    );
 
     Result := tempQuery;
 
