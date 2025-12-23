@@ -100,7 +100,7 @@ begin
       'Экспорт завершён с ошибками',
       TMWOHistoryOut
     );
-    Result := cmd_OK_WithErrors;
+    Result := cmd_error;
   end
   else
   begin

@@ -167,6 +167,23 @@ begin
   );
 
   try
+
+    // Проверяем, есть ли данные в датасете
+    if not ADataset.Active then
+      ADataset.Open; // Если нужно открыть датасет
+
+
+       // Проверяем, не пуст ли датасет
+    if ADataset.IsEmpty then
+    begin
+      programlog.LogOutFormatStr(
+        'uzvaccess: Таблица %s пуста',
+        [ATableName],
+        LM_Warning
+      );
+      Exit; // Возвращаем пустые инструкции
+    end;
+
     // Проход по всем строкам датасета
     ADataset.First;
 

@@ -404,6 +404,7 @@ begin
   tempQuery.Transaction := FTransaction;
 
   try
+    //tempQuery.SQL.Text := 'SELECT * FROM ' + ATableName;
     tempQuery.SQL.Text := Format('SELECT * FROM [%s]', [ATableName]);
     tempQuery.Open;
 
